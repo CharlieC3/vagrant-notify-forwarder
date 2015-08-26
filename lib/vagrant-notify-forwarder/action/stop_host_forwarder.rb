@@ -9,12 +9,9 @@ module VagrantPlugins
         end
 
         def call(env)
-          @app.call env
-
           return unless env[:machine].config.notify_forwarder.enable
 
           pidfile = Utils.host_pidfile env
-
           if File.exists? pidfile
             pidfile.open('r') do |f|
               f.readlines.each do |process|
@@ -27,6 +24,7 @@ module VagrantPlugins
               pidfile.delete
             end
           end
+          @app.call env
         end
       end
     end

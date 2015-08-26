@@ -8,13 +8,23 @@ module VagrantPlugins
 
       register_boot_hooks = lambda do |hook|
         require_relative 'action/start_host_forwarder'
-        require_relative 'action/stop_host_forwarder'
         require_relative 'action/start_client_forwarder'
 
         hook.after Vagrant::Action::Builtin::Provision,
                    VagrantPlugins::VagrantNotifyForwarder::Action::StartHostForwarder
         hook.after VagrantPlugins::VagrantNotifyForwarder::Action::StartHostForwarder,
                    VagrantPlugins::VagrantNotifyForwarder::Action::StartClientForwarder
+      end
+
+      register_provision_hooks = lambda do |hook|
+        require_relative 'action/start_host_forwarder'
+        require_relative 'action/stop_host_forwarder'
+
+        # Restart notify forwarder to ensure a predictable state
+        hook.after Vagrant::Action::Builtin::Provision,
+                   VagrantPlugins::VagrantNotifyForwarder::Action::StopHostForwarder
+        hook.after VagrantPlugins::VagrantNotifyForwarder::Action::StopHostForwarder,
+                   VagrantPlugins::VagrantNotifyForwarder::Action::StartHostForwarder
       end
 
       register_halt_hooks = lambda do |hook|
@@ -38,6 +48,8 @@ module VagrantPlugins
 
       action_hook :start_notify_forwarder, :machine_action_up, &register_boot_hooks
       action_hook :start_notify_forwarder, :machine_action_reload, &register_boot_hooks
+
+      action_hook :start_notify_forwarder, :machine_action_provision, &register_provision_hooks
 
       action_hook :stop_notify_forwarder, :machine_action_halt, &register_halt_hooks
       action_hook :stop_notify_forwarder, :machine_action_reload, &register_halt_hooks

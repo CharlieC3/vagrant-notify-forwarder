@@ -36,8 +36,6 @@ module VagrantPlugins
             env[:machine].config.vm.network :forwarded_port, host: port, guest: port, protocol: 'udp'
           end
 
-          @app.call env
-
           if env[:machine].config.notify_forwarder.enable
             path = ensure_binary_downloaded env
             return unless path
@@ -52,6 +50,7 @@ module VagrantPlugins
               end
             end
           end
+          @app.call env
         end
       end
     end
